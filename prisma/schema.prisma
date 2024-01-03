@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SnappySubscription {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  image_url   String?
+  type        Int       @default(1)
+  price       Int?
+  allowedUser Int
+  kitchen_id  Int
+  plan_type   Int // 1 => monthly, 2 => yearly
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  deletedAt   DateTime? @db.Timestamptz()
+}
+
+model SubscriptionChangeRequest {
+  id               Int       @id @default(autoincrement())
+  user_id          Int
+  invoice_id       Int       @unique
+  invoice          Invoice   @relation(fields: [invoice_id], references: [id])
+  current_subscription_id  Int
+  request_subscription_id  Int
+  requested_action Int // 1 => DOWNGRADE, 2=>UPGRADE
+  change_processed Boolean   @default(false) // boolean default false, true with new cycle
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now()) @updatedAt
+  deletedAt        DateTime? @db.Timestamptz()
+}
+
+model Billing {
+  id              Int       @id @default(autoincrement())
+  user_id         Int
+  subscription_id Int
+  status          Int // 1 => pending, 2=> success, 3=> failed, 4=>refunded, 5=>cancelled, 
+  amount          Int
+  invoice         Invoice?
+  address         String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  deletedAt       DateTime? @db.Timestamptz()
+}
+
+model Invoice {
+  id                          Int                        @id @default(autoincrement())
+  invoice_number              Int
+  amount                      Int
+  status                      Int // 1 => pending, 2 => paid, 3 => failed
+  billing                     Billing                    @relation(fields: [billing_id], references: [id])
+  billing_id                  Int                        @unique
+  payment                     Payment?
+  plan_type                   Int // from subscription.plan_type
+  subscription_change_request SubscriptionChangeRequest?
+  expires_at                  DateTime
+  createdAt                   DateTime                   @default(now())
+  updatedAt                   DateTime                   @default(now()) @updatedAt
+  deletedAt                   DateTime?                  @db.Timestamptz()
+}
+
+model Payment {
+  id             Int       @id @default(autoincrement())
+  invoice_id     Int       @unique
+  invoice        Invoice   @relation(fields: [invoice_id], references: [id])
+  amount         Int
+  payment_method Int // 1=>Stripe, 2=>any other method soo far
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+  deletedAt      DateTime? @db.Timestamptz()
+}

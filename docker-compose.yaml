@@ -1,0 +1,13 @@
+version: '3.3'
+services:
+    snappy.images.db:
+        image: 'mdillon/postgis:10-alpine'
+        container_name: snappy-order.db
+        ports:
+            - 5434:5432
+        # networks:
+        #     - swiftsales
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASS=click123
+            - POSTGRES_DB=snappy-order
