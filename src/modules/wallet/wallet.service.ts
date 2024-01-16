@@ -42,4 +42,17 @@ export class WalletService {
             throw new BadRequestException(error)
         }
     }
+
+    async getWallet(user: any){
+        try {
+            if(user.accountId){
+                let staffWallet = await this._dbService.wallet.findFirst({where: {user_id: parseInt(user.userId), account_id: parseInt(user.accountId)}})
+                return staffWallet
+            }
+            let userWallet = await this._dbService.wallet.findFirst({where: {user_id: parseInt(user.userId)}})
+            return userWallet
+        } catch (error) {
+            throw new BadRequestException("")
+        }
+    }
 }

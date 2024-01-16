@@ -17,13 +17,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     console.log(payload.expires_at < new Date().getTime())
     let token = ""
     if(payload.expires_at < new Date().getTime()){
-        let {email, id, admin, staff} = payload
+        let {email, id, admin, staff, account_id} = payload
         try {
             token = (await Authorize({email, id, admin, staff})).data
         } catch (error) {
             throw new UnauthorizedException(error.message)
         }
     }
-    return { userId: payload.id, username: payload.email, token };
+    return { userId: payload.id, accountId: payload.account_id, username: payload.email, token };
   }
 }
