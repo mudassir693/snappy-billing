@@ -26,17 +26,17 @@ model SnappySubscription {
 }
 
 model SubscriptionChangeRequest {
-  id               Int       @id @default(autoincrement())
-  user_id          Int
-  invoice_id       Int       @unique
-  invoice          Invoice   @relation(fields: [invoice_id], references: [id])
-  current_subscription_id  Int
-  request_subscription_id  Int
-  requested_action Int // 1 => DOWNGRADE, 2=>UPGRADE
-  change_processed Boolean   @default(false) // boolean default false, true with new cycle
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @default(now()) @updatedAt
-  deletedAt        DateTime? @db.Timestamptz()
+  id                      Int       @id @default(autoincrement())
+  user_id                 Int
+  invoice_id              Int       @unique
+  invoice                 Invoice   @relation(fields: [invoice_id], references: [id])
+  current_subscription_id Int
+  request_subscription_id Int
+  requested_action        Int // 1 => DOWNGRADE, 2=>UPGRADE
+  change_processed        Boolean   @default(false) // boolean default false, true with new cycle
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @default(now()) @updatedAt
+  deletedAt               DateTime? @db.Timestamptz()
 }
 
 model Billing {
@@ -45,7 +45,7 @@ model Billing {
   subscription_id Int
   status          Int // 1 => pending, 2=> success, 3=> failed, 4=>refunded, 5=>cancelled, 
   amount          Int
-  invoice         Invoice?
+  invoice         Invoice[]
   address         String
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now()) @updatedAt
@@ -54,7 +54,9 @@ model Billing {
 
 model Invoice {
   id                          Int                        @id @default(autoincrement())
-  invoice_number              Int
+  invoice_number              String                     @unique
+  user_id                     Int                        @default(0)
+  kitchen_id                  Int                        @default(0)
   amount                      Int
   status                      Int // 1 => pending, 2 => paid, 3 => failed
   billing                     Billing                    @relation(fields: [billing_id], references: [id])
@@ -66,6 +68,16 @@ model Invoice {
   createdAt                   DateTime                   @default(now())
   updatedAt                   DateTime                   @default(now()) @updatedAt
   deletedAt                   DateTime?                  @db.Timestamptz()
+}
+
+model Wallet {
+  id         Int       @id @default(autoincrement())
+  amount     Int       @default(0)
+  user_id    Int
+  account_id Int?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+  deletedAt  DateTime? @db.Timestamptz()
 }
 
 model Payment {

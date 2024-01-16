@@ -19,13 +19,13 @@ export class BillingService {
     private _subscriptionChangeRequestService: SubscriptionChangeRequestService,
   ) {}
 
-  private async _handle_ongoing_subscription(
+  private async _handleOngoingSubscription(
     on_going_plan: Billing,
-    requested_subscription_id: number
+    requested_subscription_id: number,
   ) {
     let current_subscription: SnappySubscription;
     try {
-        current_subscription =
+      current_subscription =
         await this._dbService.snappySubscription.findUnique({
           where: { id: on_going_plan.subscription_id },
         });
@@ -46,15 +46,20 @@ export class BillingService {
       new NotFoundException('Invalid subscription_id');
     }
     let subscription_change_request_payload = {
-        user_id: on_going_plan.user_id,
-        // @ts-ignore
-        invoice_id: on_going_plan.invoice.id,
-        current_subscription_id: on_going_plan.subscription_id,
-        request_subscription_id: requested_subscription_id,
-        requested_action: current_subscription.price > requested_subscription.price ? SubscriptionChangeRequestRequestedAction.DOWNGRADE : SubscriptionChangeRequestRequestedAction.UPGRADE
-    }
+      user_id: on_going_plan.user_id,
+      // @ts-ignore
+      invoice_id: on_going_plan.invoice[0].id,
+      current_subscription_id: on_going_plan.subscription_id,
+      request_subscription_id: requested_subscription_id,
+      requested_action:
+        current_subscription.price > requested_subscription.price
+          ? SubscriptionChangeRequestRequestedAction.DOWNGRADE
+          : SubscriptionChangeRequestRequestedAction.UPGRADE,
+    };
 
-    await this._subscriptionChangeRequestService.createOrUpdateChangeRequest(subscription_change_request_payload)
+    await this._subscriptionChangeRequestService.createOrUpdateChangeRequest(
+      subscription_change_request_payload,
+    );
   }
 
   async createBilling(billingData: any, userData: any) {
@@ -62,16 +67,19 @@ export class BillingService {
       let on_going_plan: Billing = await this._dbService.billing.findFirst({
         where: {
           user_id: userData.userId,
-          invoice: { expires_at: { gt: new Date() } },
+          invoice: { some: { expires_at: { gt: new Date() },user_id: userData.userId } },
         },
         include: { invoice: true },
       });
-      if(on_going_plan){
-        await this._handle_ongoing_subscription(on_going_plan, billingData.subscription_id);
+      if (on_going_plan) {
+        await this._handleOngoingSubscription(
+          on_going_plan,
+          billingData.subscription_id,
+        );
         return {
-            success: true,
-            message:"Your desired package will update from next cycle"
-        }
+          success: true,
+          message: 'Your desired package will update from next cycle',
+        };
       }
       let subscription: SnappySubscription;
       try {
@@ -84,11 +92,6 @@ export class BillingService {
       if (!subscription) {
         throw new NotFoundException('invalid subscription reference');
       }
-
-
-
-
-
       let create_billingData: Billing;
       try {
         await this._dbService.$transaction(async (tx) => {
@@ -105,7 +108,12 @@ export class BillingService {
           await tx.invoice.create({
             data: {
               amount: create_billingData.amount,
-              invoice_number: 100,
+              invoice_number:
+                subscription.kitchen_id + "-"+
+                subscription.name.substring(0, 4).toUpperCase() + "-"+
+                Math.floor(Math.random() * 10000),
+              kitchen_id: subscription.kitchen_id,
+              user_id: userData.userId,
               status: invoiceStatus.PENDING,
               billing_id: create_billingData.id,
               plan_type: subscription.plan_type,
@@ -117,6 +125,8 @@ export class BillingService {
       } catch (error) {
         throw new BadRequestException(error);
       }
+
+      // try for payment from here
     } catch (error) {
       throw new BadRequestException(error);
     }

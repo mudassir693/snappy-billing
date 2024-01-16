@@ -7,9 +7,7 @@ export class SubscriptionChangeRequestService {
 
     async createOrUpdateChangeRequest(change_plan_request: any){
         try {
-            console.log(change_plan_request);
             let is_request_exist = await this._dbService.subscriptionChangeRequest.findFirst({where:{user_id: change_plan_request.user_id, change_processed: false}})
-            console.log(is_request_exist)
             if(is_request_exist){
                 await this._dbService.subscriptionChangeRequest.update({where:{id: is_request_exist.id}, data:{request_subscription_id: change_plan_request.request_subscription_id}})
                 return true 

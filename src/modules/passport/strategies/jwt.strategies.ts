@@ -14,6 +14,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    console.log(payload.expires_at < new Date().getTime())
     let token = ""
     if(payload.expires_at < new Date().getTime()){
         let {email, id, admin, staff} = payload
