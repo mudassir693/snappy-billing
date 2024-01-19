@@ -17,6 +17,7 @@ model SnappySubscription {
   image_url   String?
   type        Int       @default(1)
   price       Int?
+  account_id    Int
   allowedUser Int
   kitchen_id  Int
   plan_type   Int // 1 => monthly, 2 => yearly

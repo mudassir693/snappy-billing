@@ -105,7 +105,7 @@ export class BillingService {
             },
           });
           let invoice_expiration_date = moment().add(1, 'months');
-          await tx.invoice.create({
+          let invoice = await tx.invoice.create({
             data: {
               amount: create_billingData.amount,
               invoice_number:
@@ -120,6 +120,26 @@ export class BillingService {
               expires_at: invoice_expiration_date.toISOString(),
             },
           });
+
+          // check wallet balance
+          let userWallet = await tx.wallet.findFirst({where: {
+            user_id: userData.userId,
+            ...(userData.accountId && {account_id: userData.accountId})
+          }})
+          if(userWallet.amount > create_billingData.amount){
+            let new_wallet_amount =  userWallet.amount - create_billingData.amount
+
+            await tx.wallet.update({where: {id: userWallet.id}, data: {amount: new_wallet_amount}})
+
+            let kitchen_owner_wallet = await tx.wallet.findFirst({
+              where: {
+                account_id: subscription.account_id
+              }
+            })
+            await tx.wallet.update({where: {id: kitchen_owner_wallet.id}, data: {amount: kitchen_owner_wallet.amount + new_wallet_amount}})
+
+            await tx.invoice.update({where: {id: invoice.id}, data: {status: invoiceStatus.PAID}})
+          }
         });
         return create_billingData;
       } catch (error) {

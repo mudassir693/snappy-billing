@@ -16,6 +16,7 @@ export class SubscriptionService {
                     type: subscriptionData.type,
                     price: subscriptionData.price,
                     allowedUser: subscriptionData.allowedUser,
+                    account_id: subscriptionData.account_id,
                     kitchen_id: subscriptionData.kitchen_id,
                     plan_type: subscriptionData.plan_type || 1
                 }
