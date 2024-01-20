@@ -25,6 +25,39 @@ export class InvoiceService {
         }
     }
 
+    async getUserInvoices(user_id: number){
+        try {
+            let invoices = await this._dbService.invoice.findMany({where: {user_id}, orderBy:{createdAt: 'desc'}})
+            return {
+                invoices
+            }
+        } catch (error) {
+            throw new BadRequestException(error.message)
+        }
+    }
+
+    async getKittchenInvoices(kitchen_id: number, query: any){
+        try {
+            let where_params = {
+                kitchen_id
+            }
+            if(query.status){
+                where_params['status'] = query.status
+            }
+            if(query.current_month){
+                where_params['expires_at'] = {
+                    gt: new Date().toISOString()
+                } 
+            }
+            let invoices = await this._dbService.invoice.findMany({where: where_params, orderBy:{createdAt: 'desc'}})
+            return {
+                invoices
+            }
+        } catch (error) {
+            throw new BadRequestException(error.message)
+        }
+    }
+
     async getInvoiceById(invoice_id: number): Promise<{invoice:Invoice}>{
         try {
             let invoice: Invoice;
