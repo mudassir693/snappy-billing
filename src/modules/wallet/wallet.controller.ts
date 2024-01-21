@@ -17,7 +17,6 @@ export class WalletController {
 
     @EventPattern('staff_created')
     async staffCreated(@Payload() data: any, @Ctx() context: RmqContext){
-        console.log('staff_created: ', data)
         let wallet_create = await this._walletService.createStaffWallet(data)
         if(wallet_create['success']){
             this._rmqService.ack(context)
