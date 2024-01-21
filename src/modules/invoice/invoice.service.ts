@@ -46,7 +46,7 @@ export class InvoiceService {
             }
             if(query.current_month){
                 where_params['expires_at'] = {
-                    gt: new Date().toISOString()
+                    gte: new Date().toISOString()
                 } 
             }
             let invoices = await this._dbService.invoice.findMany({where: where_params, orderBy:{createdAt: 'desc'}})

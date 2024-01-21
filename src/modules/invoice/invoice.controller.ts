@@ -15,6 +15,7 @@ export class InvoiceController {
         }
     }
 
+    @Get('/user')
     async GetUserInvoices(@Request() request: any){
         let invoices = await this._invoiceService.getUserInvoices(request.user.userId)
         return {
@@ -23,9 +24,10 @@ export class InvoiceController {
         }
     }
 
+    @Get('/kitchen/:id')
     // Order Info for kitchen how much subscription they hhad on Monthly basis.
-    async GetKitchenInvoices(@Request() request: any){
-        let invoices = await this._invoiceService.getUserInvoices(request.user.accountId)
+    async GetKitchenInvoices(@Param('id') id: string, @Query() query: any, @Request() request: any){
+        let invoices = await this._invoiceService.getKittchenInvoices(parseInt(id), query)
         return {
             request: request.user.token,
             response: invoices
